@@ -46,10 +46,13 @@
       attribution: 'Map © <a href="https://www.openstreetmap.org">OpenStreetMap</a>',
       ...TILE_OPTS
     }).addTo(map);
-    const sat = L.tileLayer(
-      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      { attribution: 'Imagery © <a href="https://www.esri.com">Esri</a>', ...TILE_OPTS }
-    );
+    // Google satellite serves imagery to a higher native zoom than Esri (which
+    // went blank past z19), so close-up sign checking still shows tiles.
+    const sat = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+      attribution: 'Imagery © Google',
+      maxNativeZoom: 20,
+      maxZoom: 22
+    });
     baseLayers = [osm, sat];
     layersControl = L.control.layers({ OSM: osm, Satellite: sat }, {}, { position: 'topright' }).addTo(map);
     marker = beginMarker(map.getCenter());
@@ -94,7 +97,9 @@
         .addTo(crossLayer);
     }
     crossLayer.addTo(map);
-    map.fitBounds(polyline.getBounds(), { padding: [30, 30] });
+    // don't yank the view if the segment is already fully on screen
+    const b = polyline.getBounds();
+    if (!map.getBounds().contains(b)) map.fitBounds(b, { padding: [30, 30] });
   }
 
   // imperative API used by the page (via bind:this)
