@@ -53,31 +53,28 @@
   }
 </script>
 
-<section class="module">
-  <header>
+<details class="module" open>
+  <summary>
     <h2>Search</h2>
-    <label>Country
-      <select bind:value={country}>
-        <option value="vn">vn</option>
-        <option value="de">de</option>
-        <option value="be">be</option>
-      </select>
-    </label>
-  </header>
+    {#if term.trim()}<span class="summary-hint">{current.label}: {term.trim()}</span>{/if}
+  </summary>
 
   <div class="row search-row">
-    <label>Search by
-      <select bind:value={searchBy}>
-        {#each SEARCH_BY as s (s.key)}<option value={s.key}>{s.label}</option>{/each}
-      </select>
-    </label>
+    <select bind:value={searchBy} title="Search by">
+      {#each SEARCH_BY as s (s.key)}<option value={s.key}>{s.label}</option>{/each}
+    </select>
     <input
       type="text"
       bind:value={term}
       placeholder={current.placeholder}
       onkeydown={(e) => e.key === 'Enter' && go()}
-      style="flex:1;min-width:160px"
+      style="flex:1;min-width:140px"
     />
+    <select bind:value={country} title="Country (route-shield colours)">
+      <option value="vn">vn</option>
+      <option value="de">de</option>
+      <option value="be">be</option>
+    </select>
     <button class="btn btn-primary" disabled={loading} onclick={go}>
       {loading ? 'Searching…' : 'Search'}
     </button>
@@ -96,7 +93,7 @@
       </div>
     </div>
   </details>
-</section>
+</details>
 
 <style>
   .search-row {

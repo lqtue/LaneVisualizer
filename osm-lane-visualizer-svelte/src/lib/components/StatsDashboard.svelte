@@ -97,11 +97,16 @@
   const ranked = $derived([...coverage].sort((a, b) => a.pct - b.pct));
 </script>
 
-<section class="module">
-  <header>
-    <h2>{meta?.ref || meta?.name || 'Road'} — data completeness</h2>
-    {@render actions?.()}
-  </header>
+<details class="module" open>
+  <summary>
+    <h2>{meta?.ref || meta?.name || 'Road'} — completeness</h2>
+    <span class="summary-hint">
+      <b style={`color:${barColor(overallPct)}`}>{overallPct.toFixed(0)}%</b> tagged{#if lengthCovPct != null}
+        · <b style={`color:${covColor(lengthCovPct)}`}>{lengthCovPct.toFixed(0)}%</b> vs official{/if}
+    </span>
+  </summary>
+
+  <div class="toolbar">{@render actions?.()}</div>
 
   <!-- two headline scores: the two questions a QA asks -->
   <div class="scores">
@@ -158,15 +163,23 @@
       <p class="note">"length vs official" counts oneway ways as half (assumed dual carriageway); not geometry-paired. Over 100% usually means the relation covers more than the official figure.</p>
     </div>
   </details>
-</section>
+</details>
 
 <style>
+  .toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+  }
+  .toolbar:empty {
+    display: none;
+  }
   .scores {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 28px;
-    margin-bottom: 14px;
+    gap: 24px;
+    margin-bottom: 12px;
   }
   .score {
     display: grid;
@@ -177,7 +190,7 @@
   }
   .score .big {
     grid-row: 1 / 3;
-    font-size: 40px;
+    font-size: 28px;
     font-weight: 800;
     line-height: 0.9;
   }

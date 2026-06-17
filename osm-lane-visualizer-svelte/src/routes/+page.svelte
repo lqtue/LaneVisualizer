@@ -7,6 +7,7 @@
   import MapView from '$lib/components/MapView.svelte';
   import StatsDashboard from '$lib/components/StatsDashboard.svelte';
   import ExportPanel from '$lib/components/ExportPanel.svelte';
+  import HelpDialog from '$lib/components/HelpDialog.svelte';
   import '$lib/components/modules.css';
   import type {
     RenderResult,
@@ -152,7 +153,10 @@
   <link rel="stylesheet" href={`${base}/css/${country}.css`} />
 </svelte:head>
 
-<h1>OSM Lane Visualizer</h1>
+<div class="topbar">
+  <h1>OSM Lane Visualizer</h1>
+  <HelpDialog />
+</div>
 
 <!-- module 1: search & configuration -->
 <SearchPanel bind:country {totalStartPoints} {loading} onsearch={handleSearch} />
@@ -191,6 +195,14 @@
 </div>
 
 <style>
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .topbar h1 {
+    flex: 1;
+  }
   .status {
     clear: both;
     font-weight: bold;
