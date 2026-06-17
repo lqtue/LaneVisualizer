@@ -45,8 +45,6 @@
     intersections: false
   });
   let start = $state(1);
-  let showHelp = $state(false);
-  let showConfig = $state(false);
 
   function go() {
     if (loading) return;
@@ -85,37 +83,24 @@
     </button>
   </div>
 
-  <div class="row config-bar">
-    <button class="btn" aria-pressed={showConfig} onclick={() => (showConfig = !showConfig)}>
-      {showConfig ? '▾' : '▸'} Configuration
-    </button>
-    {#if showConfig}
-      <button class="help-btn" aria-pressed={showHelp} title="Explain each option" onclick={() => (showHelp = !showHelp)}>?</button>
-    {/if}
-  </div>
-
-  {#if showConfig}
+  <details class="config">
+    <summary class="btn">Configuration</summary>
     <div class="config-grid">
       {#each CONFIG as c (c.key)}
         <div class="opt">
-          <label><input type="checkbox" bind:checked={cfg[c.key]} /> {c.label}</label>
-          {#if showHelp}<p class="help">{c.help}</p>{/if}
+          <label title={c.help}><input type="checkbox" bind:checked={cfg[c.key]} /> {c.label}</label>
         </div>
       {/each}
       <div class="opt">
-        <label>Start at end number <input type="text" bind:value={start} style="width:42px" /></label>
-        {#if showHelp}<p class="help">Which chain end to begin drawing from ({totalStartPoints} found).</p>{/if}
+        <label title={`Which chain end to begin drawing from (${totalStartPoints} found).`}>Start at end number <input type="text" bind:value={start} style="width:42px" /></label>
       </div>
     </div>
-  {/if}
+  </details>
 </section>
 
 <style>
   .search-row {
     margin-bottom: 8px;
-  }
-  .config-bar {
-    gap: 6px;
   }
   .config-grid {
     display: grid;
@@ -127,11 +112,5 @@
     display: inline-flex;
     align-items: center;
     gap: 5px;
-  }
-  .help {
-    margin: 2px 0 0 20px;
-    font-size: 11px;
-    color: #6b7280;
-    line-height: 1.3;
   }
 </style>

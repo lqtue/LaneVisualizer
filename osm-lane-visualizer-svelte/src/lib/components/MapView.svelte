@@ -111,20 +111,23 @@
 
 <div class="mapwrap">
   <div class="map" bind:this={mapEl}></div>
-  <div class="hint">
-    <label class="opacity">Road opacity {Math.round(geomOpacity * 100)}%
-      <input type="range" min="0.1" max="1" step="0.05" bind:value={geomOpacity} oninput={applyOpacity} />
-    </label>
-    <label class="custom">XYZ
-      <input
-        type="text"
-        placeholder={'https://…/{z}/{x}/{y}.png'}
-        bind:value={customUrl}
-        onkeydown={(e) => e.key === 'Enter' && addCustom()}
-      />
-    </label>
-    <button class="btn" onclick={addCustom}>Add</button>
-  </div>
+  <details class="map-opts">
+    <summary class="btn">Map options</summary>
+    <div class="hint">
+      <label class="opacity">Road opacity {Math.round(geomOpacity * 100)}%
+        <input type="range" min="0.1" max="1" step="0.05" bind:value={geomOpacity} oninput={applyOpacity} />
+      </label>
+      <label class="custom">XYZ
+        <input
+          type="text"
+          placeholder={'https://…/{z}/{x}/{y}.png'}
+          bind:value={customUrl}
+          onkeydown={(e) => e.key === 'Enter' && addCustom()}
+        />
+      </label>
+      <button class="btn" onclick={addCustom}>Add</button>
+    </div>
+  </details>
 </div>
 
 <style>
@@ -139,6 +142,9 @@
     border: 1px solid #ccc;
     border-radius: 6px;
   }
+  .map-opts {
+    margin: 6px 2px 0;
+  }
   .hint {
     display: flex;
     align-items: center;
@@ -146,7 +152,7 @@
     gap: 10px;
     font-size: 11px;
     color: #888;
-    margin: 6px 2px 0;
+    margin: 8px 0 0;
   }
   .opacity,
   .custom {

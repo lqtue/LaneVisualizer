@@ -87,21 +87,21 @@ body {
   background: #1d4ed8;
 }
 
-/* little round "?" help toggle in a module header */
-.help-btn {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 1px solid #cbd2dc;
-  background: #f3f5f9;
-  color: #4b5563;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  line-height: 1;
+/* native <details> disclosure whose <summary> looks like a .btn */
+summary.btn {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
 }
-.help-btn[aria-pressed='true'] {
-  background: #2563eb;
-  border-color: #2563eb;
-  color: #fff;
+summary.btn::-webkit-details-marker {
+  display: none;
+}
+summary.btn::before {
+  content: '▸';
+  font-size: 10px;
+}
+details[open] > summary.btn::before {
+  content: '▾';
 }

@@ -114,7 +114,6 @@ export interface RelationMeta {
   name: string;
   ref: string;
   wikidata: string;
-  wikipedia: string;
 }
 
 // one search dispatched from the SearchPanel module to the page orchestrator

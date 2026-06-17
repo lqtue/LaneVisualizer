@@ -14,7 +14,6 @@
   } = $props();
 
   let scale = $state(0.7); // shrink so multi-lane roads fit without a wide scroll
-  let showLegend = $state(false);
 
   // hatch fill matching div.lane.nolane in style.css
   const HATCH =
@@ -45,12 +44,10 @@
     <div class="diagram-tools">
       <label>Size <input type="range" min="0.4" max="1.2" step="0.05" bind:value={scale} /></label>
       <span>{Math.round(scale * 100)}%</span>
-      <button class="btn" aria-pressed={showLegend} onclick={() => (showLegend = !showLegend)}>
-        {showLegend ? 'Hide legend' : 'Legend'}
-      </button>
     </div>
 
-    {#if showLegend}
+    <details class="legend-disc">
+      <summary class="btn">Legend</summary>
       <div class="legend">
         <div class="lg-group">
           <span class="lg-h">Lanes</span>
@@ -78,7 +75,7 @@
           {/if}
         </div>
       </div>
-    {/if}
+    </details>
   {/if}
 
   <!-- svelte-ignore a11y_no_static_element_interactions -->

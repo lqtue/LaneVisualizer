@@ -205,8 +205,7 @@ export class LaneVisualizer {
     return {
       name: t['name'] || '',
       ref: t['ref'] || '',
-      wikidata: t['wikidata'] || '',
-      wikipedia: t['wikipedia'] || ''
+      wikidata: t['wikidata'] || ''
     };
   }
 

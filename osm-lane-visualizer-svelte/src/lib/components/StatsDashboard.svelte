@@ -20,8 +20,6 @@
     actions?: Snippet;
   } = $props();
 
-  let detailed = $state(false);
-
   const MAJOR = new Set([
     'motorway', 'motorway_link', 'trunk', 'trunk_link',
     'primary', 'primary_link', 'secondary', 'secondary_link', 'tertiary', 'tertiary_link'
@@ -102,9 +100,6 @@
 <section class="module">
   <header>
     <h2>{meta?.ref || meta?.name || 'Road'} — data completeness</h2>
-    <button class="btn" aria-pressed={detailed} onclick={() => (detailed = !detailed)}>
-      {detailed ? 'Less' : 'Details'}
-    </button>
     {@render actions?.()}
   </header>
 
@@ -149,7 +144,8 @@
   </div>
 
   <!-- details: sanity checks, not triage drivers -->
-  {#if detailed}
+  <details class="details-disc">
+    <summary class="btn">Details</summary>
     <div class="details">
       {#if speedDist().length}
         <div class="speeds">
@@ -161,7 +157,7 @@
       {/if}
       <p class="note">"length vs official" counts oneway ways as half (assumed dual carriageway); not geometry-paired. Over 100% usually means the relation covers more than the official figure.</p>
     </div>
-  {/if}
+  </details>
 </section>
 
 <style>
@@ -243,8 +239,11 @@
     height: 100%;
   }
 
-  .details {
+  .details-disc {
     margin-top: 14px;
+  }
+  .details {
+    margin-top: 10px;
     padding-top: 12px;
     border-top: 1px solid #eef1f5;
   }
