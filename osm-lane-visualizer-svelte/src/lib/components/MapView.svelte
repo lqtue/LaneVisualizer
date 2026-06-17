@@ -9,25 +9,48 @@
   let polyline: any;
   let crossLayer: any;
   let mapEl: HTMLDivElement;
+  let layersControl: any;
+  let baseLayers: any[] = []; // built-in bases, so a custom layer can replace them
+  let customLayer: any;
   let geomOpacity = $state(0.85); // road geometry line opacity (slider)
+  let customUrl = $state('');
+
+  // overzoom past a source's native max instead of showing blank/grey tiles
+  const TILE_OPTS = { maxNativeZoom: 19, maxZoom: 22 };
 
   function applyOpacity() {
     polyline?.setStyle({ opacity: geomOpacity });
     marker?.setStyle?.({ opacity: geomOpacity, fillOpacity: geomOpacity });
   }
 
+  // add (or replace) a custom XYZ tile source and switch to it. {z}/{x}/{y} template.
+  function addCustom() {
+    const url = customUrl.trim();
+    if (!map || !/\{z\}.*\{x\}.*\{y\}|\{z\}.*\{y\}.*\{x\}/.test(url)) return;
+    if (customLayer) {
+      map.removeLayer(customLayer);
+      layersControl.removeLayer(customLayer);
+    }
+    customLayer = L.tileLayer(url, { attribution: 'Custom XYZ', ...TILE_OPTS });
+    layersControl.addBaseLayer(customLayer, 'Custom');
+    for (const l of baseLayers) map.removeLayer(l);
+    customLayer.addTo(map);
+  }
+
   onMount(async () => {
     L = (await import('leaflet')).default;
     await import('leaflet/dist/leaflet.css');
-    map = L.map(mapEl).setView([16.0, 107.5], 5); // Vietnam
+    map = L.map(mapEl, { maxZoom: 22 }).setView([16.0, 107.5], 5); // Vietnam
     const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: 'Map © <a href="https://www.openstreetmap.org">OpenStreetMap</a>'
+      attribution: 'Map © <a href="https://www.openstreetmap.org">OpenStreetMap</a>',
+      ...TILE_OPTS
     }).addTo(map);
     const sat = L.tileLayer(
       'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      { attribution: 'Imagery © <a href="https://www.esri.com">Esri</a>', maxZoom: 19 }
+      { attribution: 'Imagery © <a href="https://www.esri.com">Esri</a>', ...TILE_OPTS }
     );
-    L.control.layers({ OSM: osm, Satellite: sat }, {}, { position: 'topright' }).addTo(map);
+    baseLayers = [osm, sat];
+    layersControl = L.control.layers({ OSM: osm, Satellite: sat }, {}, { position: 'topright' }).addTo(map);
     marker = beginMarker(map.getCenter());
     polyline = L.polyline([[0, 0]]).addTo(map);
     // the map sits in a CSS-grid column; recompute size once layout settles
@@ -88,10 +111,18 @@
 <div class="mapwrap">
   <div class="map" bind:this={mapEl}></div>
   <div class="hint">
-    <span>Hover a way to preview · click a way row to zoom here.</span>
     <label class="opacity">Road opacity {Math.round(geomOpacity * 100)}%
       <input type="range" min="0.1" max="1" step="0.05" bind:value={geomOpacity} oninput={applyOpacity} />
     </label>
+    <label class="custom">XYZ
+      <input
+        type="text"
+        placeholder={'https://…/{z}/{x}/{y}.png'}
+        bind:value={customUrl}
+        onkeydown={(e) => e.key === 'Enter' && addCustom()}
+      />
+    </label>
+    <button class="btn" onclick={addCustom}>Add</button>
   </div>
 </div>
 
@@ -116,10 +147,27 @@
     color: #888;
     margin: 6px 2px 0;
   }
-  .opacity {
-    margin-left: auto;
+  .opacity,
+  .custom {
     display: inline-flex;
     align-items: center;
     gap: 5px;
+  }
+  .custom {
+    flex: 1;
+    min-width: 140px;
+  }
+  .custom input {
+    flex: 1;
+    min-width: 0;
+    font: inherit;
+    font-size: 11px;
+    padding: 3px 6px;
+    border: 1px solid #cbd2dc;
+    border-radius: 4px;
+  }
+  .hint .btn {
+    font-size: 11px;
+    padding: 3px 10px;
   }
 </style>
