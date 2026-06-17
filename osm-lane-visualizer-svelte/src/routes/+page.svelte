@@ -175,7 +175,7 @@
   bind:this={splitEl}
   style={`grid-template-columns:${leftFrac}fr 8px ${1 - leftFrac}fr`}
 >
-  <DiagramView {html} onhover={onHover} onzoom={onZoom} ondrill={onDrill} />
+  <DiagramView {html} {country} onhover={onHover} onzoom={onZoom} ondrill={onDrill} />
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
     class="gutter"
