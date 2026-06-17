@@ -152,7 +152,7 @@
   <link rel="stylesheet" href={`${base}/css/${country}.css`} />
 </svelte:head>
 
-<h1>OSM Lane Visualizer <small>(Svelte port)</small></h1>
+<h1>OSM Lane Visualizer</h1>
 
 <!-- module 1: search & configuration -->
 <SearchPanel bind:country {totalStartPoints} {loading} onsearch={handleSearch} />
@@ -191,10 +191,6 @@
 </div>
 
 <style>
-  h1 small {
-    font-size: 14px;
-    color: #888;
-  }
   .status {
     clear: both;
     font-weight: bold;
