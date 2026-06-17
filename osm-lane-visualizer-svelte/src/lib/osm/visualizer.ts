@@ -19,6 +19,12 @@ import type {
 
 const LANEHEIGHT = 135;
 const STROKEWIDTH = 3;
+// JOSM remote control: plain http on 8111, but an https page must use the
+// TLS port 8112 or the browser blocks the call as mixed content.
+const JOSM_BASE =
+  typeof location !== 'undefined' && location.protocol === 'https:'
+    ? 'https://127.0.0.1:8112'
+    : 'http://127.0.0.1:8111';
 // Overpass endpoints tried in order; mirrors cover rate-limiting / busy dispatchers.
 const OVERPASS_ENDPOINTS = [
   'https://overpass-api.de/api/interpreter',
@@ -1312,7 +1318,7 @@ export class LaneVisualizer {
     out += `<br><a name="${id}" href="https://www.openstreetmap.org/way/${id}" title="${this.listtags(way)}" >Way ${id}</a>`;
     out += `<br>${Math.round(length)}m`;
     out += `<br><a title="view on Mapillary" target="_blank" href="http://www.mapillary.com/app/?lat=${lat.toFixed(5)}&lng=${lon.toFixed(5)}&z=16">(M)</a>`;
-    out += ` <a title="load in JOSM" target="_blank" href="http://127.0.0.1:8111/load_and_zoom?left=${(lon - 0.01).toFixed(5)}&right=${(lon + 0.01).toFixed(5)}&top=${(lat + 0.005).toFixed(5)}&bottom=${(lat - 0.005).toFixed(5)}&select=way${id}">(J)</a>`;
+    out += ` <a title="load in JOSM" target="_blank" href="${JOSM_BASE}/load_and_zoom?left=${(lon - 0.01).toFixed(5)}&right=${(lon + 0.01).toFixed(5)}&top=${(lat + 0.005).toFixed(5)}&bottom=${(lat - 0.005).toFixed(5)}&select=way${id}">(J)</a>`;
     out += ` <a title="load in level0 editor" target="_blank" href="http://level0.osmz.ru/?url=way/${id}!">(L)</a>`;
     out += ` <span class="normal" data-zoom="${id}" title="zoom map to this segment">(Z)</span>\n`;
     out += this.linkWay(id, '(V)', 'normal');
