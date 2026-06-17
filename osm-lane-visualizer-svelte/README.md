@@ -36,6 +36,25 @@ Pick country **vn**, set **Search by → Way by id**, enter `1228612274`
 **Search**. Or search a whole route with **Relation by ref** (`QL.51`) or **by name**.
 Expand **Configuration** to toggle adjacent ways, intersection detection, lane width and more.
 
+## Using it
+
+**Search panel.** Pick a **Country** (drives the route-shield colours), a **Search by**
+mode, type the ref/name/id, and **Search**. **Configuration** (collapsible) holds the
+options — hover each for a one-line explanation; "Start at end number" picks which chain
+end to begin drawing from when a road has several.
+
+**Completeness panel.** Two headline scores (attributes tagged, length vs official) plus
+per-attribute coverage bars, worst first. **Details** expands a maxspeed distribution.
+**⬇ Export data** opens a dialog to download every drawn way (computed fields + raw tags)
+as CSV or JSON, with per-column tick boxes. **Legend** (on the diagram) explains the colours.
+
+**Diagram ↔ map.** Each way row has links: **(M)** Mapillary, **(J)** JOSM remote-control,
+**(L)** level0 editor, **(Z)** zoom the map to that segment, **(V)** reload just that way.
+The whole road is drawn on the map after a search and fit to view; **hovering** a row
+highlights that segment in place, **(Z)** zooms to it. Crossing roads show as amber markers
+that link to Mapillary. Drag the divider to resize diagram vs map; use the layer control
+(top-right) or **Map options** to switch base imagery or paste a custom `{z}/{x}/{y}` source.
+
 ## Structure
 
 | File | Origin |
