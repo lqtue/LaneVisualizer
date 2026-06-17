@@ -85,7 +85,8 @@
     <div class="config-grid">
       {#each CONFIG as c (c.key)}
         <div class="opt">
-          <label title={c.help}><input type="checkbox" bind:checked={cfg[c.key]} /> {c.label}</label>
+          <label><input type="checkbox" bind:checked={cfg[c.key]} /> {c.label}</label>
+          <p class="opt-help">{c.help}</p>
         </div>
       {/each}
       <div class="opt">
@@ -109,5 +110,11 @@
     display: inline-flex;
     align-items: center;
     gap: 5px;
+  }
+  .opt-help {
+    margin: 2px 0 0 22px;
+    font-size: 0.8em;
+    opacity: 0.7;
+    line-height: 1.3;
   }
 </style>
