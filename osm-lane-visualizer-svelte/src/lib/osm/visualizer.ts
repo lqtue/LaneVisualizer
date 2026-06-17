@@ -1320,6 +1320,7 @@ export class LaneVisualizer {
     out += `<br><a title="view on Mapillary" target="_blank" href="http://www.mapillary.com/app/?lat=${lat.toFixed(5)}&lng=${lon.toFixed(5)}&z=16">(M)</a>`;
     out += ` <a title="load in JOSM" target="_blank" href="${JOSM_BASE}/load_and_zoom?left=${(lon - 0.01).toFixed(5)}&right=${(lon + 0.01).toFixed(5)}&top=${(lat + 0.005).toFixed(5)}&bottom=${(lat - 0.005).toFixed(5)}&select=way${id}">(J)</a>`;
     out += ` <a title="load in level0 editor" target="_blank" href="http://level0.osmz.ru/?url=way/${id}!">(L)</a>`;
+    out += ` <a title="edit in Rapid (iD)" target="_blank" href="https://rapideditor.org/edit#id=w${id}&map=18/${lat.toFixed(5)}/${lon.toFixed(5)}">(R)</a>`;
     out += ` <span class="normal" data-zoom="${id}" title="zoom map to this segment">(Z)</span>\n`;
     out += this.linkWay(id, '(V)', 'normal');
     out += '</div>\n';

@@ -30,7 +30,8 @@
   <h3>Diagram &amp; map</h3>
   <p>
     Each way row links to <b>(M)</b> Mapillary, <b>(J)</b> JOSM remote control,
-    <b>(L)</b> level0 editor, <b>(Z)</b> zoom the map to that segment, and <b>(V)</b> reload
+    <b>(L)</b> level0 editor, <b>(R)</b> Rapid/iD editor, <b>(Z)</b> zoom the map to that
+    segment, and <b>(V)</b> reload
     just that way. After a search the whole road is drawn and fit to view; <b>hovering</b> a
     row highlights that segment in place, <b>(Z)</b> zooms to it. Crossing roads appear as
     amber markers linking to Mapillary. Drag the divider to resize diagram vs map; use the
