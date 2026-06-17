@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { base } from '$app/paths';
   import { LaneVisualizer, wayQuery } from '$lib/osm/visualizer';
   import { fetchOfficialLengthKm } from '$lib/osm/wikidata';
   import SearchPanel from '$lib/components/SearchPanel.svelte';
@@ -138,8 +139,8 @@
 </script>
 
 <svelte:head>
-  <link rel="stylesheet" href="/css/style.css" />
-  <link rel="stylesheet" href={`/css/${country}.css`} />
+  <link rel="stylesheet" href={`${base}/css/style.css`} />
+  <link rel="stylesheet" href={`${base}/css/${country}.css`} />
 </svelte:head>
 
 <h1>OSM Lane Visualizer <small>(Svelte port)</small></h1>

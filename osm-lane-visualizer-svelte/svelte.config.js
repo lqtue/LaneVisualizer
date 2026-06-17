@@ -5,7 +5,11 @@ const config = {
   kit: {
     adapter: adapter({
       fallback: 'index.html'
-    })
+    }),
+    // project Pages serve under /<repo>; CI sets BASE_PATH, local dev stays at ''
+    paths: {
+      base: process.env.BASE_PATH || ''
+    }
   }
 };
 
