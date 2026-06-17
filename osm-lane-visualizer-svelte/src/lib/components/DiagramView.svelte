@@ -20,21 +20,22 @@
     'repeating-linear-gradient(-45deg,#666,#666 4px,#fff 4px,#fff 9px,#666 9px,#666 13px)';
 
   function over(e: MouseEvent) {
+    // hovering a way row highlights that segment on the map
     const label = (e.target as HTMLElement).closest('.label') as HTMLElement | null;
     if (label?.dataset.way) onhover(Number(label.dataset.way));
   }
 
   function click(e: MouseEvent) {
     const target = e.target as HTMLElement;
-    // drill-in links ((V), navigation arrows) reload to a single way
-    const drill = target.closest('[data-wayid]') as HTMLElement | null;
-    if (drill?.dataset.wayid) {
-      ondrill(drill.dataset.wayid);
+    // (Z) zooms the map to that segment
+    const z = target.closest('[data-zoom]') as HTMLElement | null;
+    if (z?.dataset.zoom) {
+      onzoom(Number(z.dataset.zoom));
       return;
     }
-    // clicking a way row's label zooms the map to that way
-    const label = target.closest('.label') as HTMLElement | null;
-    if (label?.dataset.way) onzoom(Number(label.dataset.way));
+    // drill-in links ((V), navigation arrows) reload to a single way
+    const drill = target.closest('[data-wayid]') as HTMLElement | null;
+    if (drill?.dataset.wayid) ondrill(drill.dataset.wayid);
   }
 </script>
 

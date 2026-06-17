@@ -5,9 +5,10 @@
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let L: any;
   let map: any;
-  let marker: any;
-  let polyline: any;
-  let crossLayer: any;
+  let roadLayer: any; // every segment polyline = the whole road
+  let highlight: any; // overlay polyline for the focused segment
+  let beginPt: any; // begin marker for the focused segment
+  let crossLayer: any; // crossing markers for the whole road
   let mapEl: HTMLDivElement;
   let layersControl: any;
   let baseLayers: any[] = []; // built-in bases, so a custom layer can replace them
@@ -19,8 +20,7 @@
   const TILE_OPTS = { maxNativeZoom: 19, maxZoom: 22 };
 
   function applyOpacity() {
-    polyline?.setStyle({ opacity: geomOpacity });
-    marker?.setStyle?.({ opacity: geomOpacity, fillOpacity: geomOpacity });
+    roadLayer?.setStyle({ opacity: geomOpacity });
   }
 
   // add (or replace) a custom XYZ tile source and switch to it. {z}/{x}/{y} template.
@@ -55,8 +55,6 @@
     });
     baseLayers = [osm, sat];
     layersControl = L.control.layers({ OSM: osm, Satellite: sat }, {}, { position: 'topright' }).addTo(map);
-    marker = beginMarker(map.getCenter());
-    polyline = L.polyline([[0, 0]]).addTo(map);
     // the map sits in a CSS-grid column; recompute size once layout settles
     setTimeout(() => map.invalidateSize(), 0);
   });
@@ -72,42 +70,52 @@
     }).addTo(map);
   }
 
-  function draw(c: WayGeom | undefined, color: string, weight: number) {
-    if (!c || !map) return;
-    map.removeLayer(marker);
-    marker = beginMarker(c.begin);
-    map.removeLayer(polyline);
-    polyline = L.polyline(c.line, { color, weight, opacity: geomOpacity }).addTo(map);
-    if (crossLayer) map.removeLayer(crossLayer);
-    crossLayer = L.layerGroup();
-    for (const x of c.crossings ?? []) {
-      if (x.lat == null || x.lon == null) continue;
-      const m = `https://www.mapillary.com/app/?lat=${x.lat.toFixed(6)}&lng=${x.lon.toFixed(6)}&z=17`;
-      L.circleMarker([x.lat, x.lon], {
-        radius: 6,
-        color: '#b45309',
-        weight: 2,
-        fillColor: '#f59e0b',
-        fillOpacity: 1
-      })
-        .bindTooltip(x.label)
-        .bindPopup(
-          `<b>${x.label}</b><br><a href="${m}" target="_blank" rel="noopener">📷 Mapillary here</a>`
-        )
-        .addTo(crossLayer);
-    }
-    crossLayer.addTo(map);
-    // don't yank the view if the segment is already fully on screen
-    const b = polyline.getBounds();
-    if (!map.getBounds().contains(b)) map.fitBounds(b, { padding: [30, 30] });
+  function crossingMarker(x: { lat: number; lon: number; label: string }) {
+    const m = `https://www.mapillary.com/app/?lat=${x.lat.toFixed(6)}&lng=${x.lon.toFixed(6)}&z=17`;
+    return L.circleMarker([x.lat, x.lon], {
+      radius: 6,
+      color: '#b45309',
+      weight: 2,
+      fillColor: '#f59e0b',
+      fillOpacity: 1
+    })
+      .bindTooltip(x.label)
+      .bindPopup(`<b>${x.label}</b><br><a href="${m}" target="_blank" rel="noopener">📷 Mapillary here</a>`);
   }
 
   // imperative API used by the page (via bind:this)
-  export function preview(c: WayGeom | undefined) {
-    draw(c, '#44f', 4);
+
+  // draw the whole road and fit it in the viewport (called after a search)
+  export function showRoad(geoms: Record<number, WayGeom>) {
+    if (!map) return;
+    for (const layer of [roadLayer, highlight, beginPt, crossLayer]) if (layer) map.removeLayer(layer);
+    highlight = beginPt = null;
+    const lines: any[] = [];
+    const crossings: any[] = [];
+    for (const id in geoms) {
+      const g = geoms[id];
+      if (g.line?.length) lines.push(L.polyline(g.line, { color: '#3b82f6', weight: 3, opacity: geomOpacity }));
+      for (const x of g.crossings ?? []) if (x.lat != null && x.lon != null) crossings.push(crossingMarker(x));
+    }
+    roadLayer = L.featureGroup(lines).addTo(map);
+    crossLayer = L.layerGroup(crossings).addTo(map);
+    if (lines.length) map.fitBounds(roadLayer.getBounds(), { padding: [30, 30] });
+  }
+
+  // overlay one segment on top of the road; fit the view to it only when `fit`
+  function focus(c: WayGeom | undefined, fit: boolean) {
+    if (!c || !map) return;
+    if (highlight) map.removeLayer(highlight);
+    if (beginPt) map.removeLayer(beginPt);
+    highlight = L.polyline(c.line, { color: '#e6194b', weight: 6, opacity: 1 }).addTo(map);
+    beginPt = beginMarker(c.begin);
+    if (fit) map.fitBounds(highlight.getBounds(), { padding: [40, 40] });
+  }
+  export function highlightSeg(c: WayGeom | undefined) {
+    focus(c, false); // hover: highlight only, don't move the map
   }
   export function zoom(c: WayGeom | undefined) {
-    draw(c, '#e6194b', 5);
+    focus(c, true); // (Z) button: highlight + zoom to it
   }
   export function resize() {
     map?.invalidateSize();

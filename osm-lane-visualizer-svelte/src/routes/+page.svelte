@@ -82,6 +82,7 @@
       rawLengthKm = result.rawLengthKm;
       intersections = result.intersections;
       exportRows = result.exportRows;
+      mapView?.showRoad(wayCoords); // draw the whole road and fit it in view
       meta = v.getRelationMeta();
       if (!html.trim()) errorMsg = 'Query returned data but no highway ways could be drawn.';
       // official length from Wikidata (non-blocking; ignore failures)
@@ -98,7 +99,7 @@
   }
 
   // diagram → map / drill-in wiring
-  const onHover = (id: number) => mapView?.preview(wayCoords[id]);
+  const onHover = (id: number) => mapView?.highlightSeg(wayCoords[id]);
   const onZoom = (id: number) => mapView?.zoom(wayCoords[id]);
   const onDrill = (wayid: string) =>
     runSearch({ query: wayQuery(wayid), start: 1, opts: lastOpts() });
