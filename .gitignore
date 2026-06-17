@@ -1,0 +1,14 @@
+# dependencies / build output
+node_modules/
+osm-lane-visualizer-svelte/node_modules/
+osm-lane-visualizer-svelte/build/
+osm-lane-visualizer-svelte/.svelte-kit/
+
+# third-party reference clone (not part of this repo)
+OSMLaneVisualizer/
+
+# local agent/workspace files
+.claude/
+
+# os
+.DS_Store
