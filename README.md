@@ -27,6 +27,8 @@ The app lives in [`osm-lane-visualizer-svelte/`](osm-lane-visualizer-svelte/).
   markers that link straight to Mapillary imagery for sign checking.
 - **Split view** — diagram on the left, full-height Leaflet map on the right, with a
   draggable divider; hover a way to preview it, click a way row to zoom the map to it.
+- **Data export** — every drawn way's computed fields plus its raw OSM tags, exported as
+  CSV or JSON with per-column selection.
 - **Vietnam route shields** — `CT` expressway (green), `QL` national (blue),
   `DT/ĐT/TL` provincial, `AH` Asian Highway. German (`de`) and Belgian (`be`) packs included.
 
@@ -39,7 +41,7 @@ npm run dev      # open the printed localhost URL
 ```
 
 Pick country **vn**, enter a relation ref such as `QL.51` (or a way/relation id), and
-Go. Data is fetched live from the Overpass API (with mirror fallback) in the browser.
+click **Search**. Data is fetched live from the Overpass API (with mirror fallback) in the browser.
 
 ```bash
 npm run build    # static site -> ./build  (adapter-static, prerendered SPA)

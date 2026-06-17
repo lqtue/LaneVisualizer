@@ -31,15 +31,18 @@ npm run build    # static site in ./build
 
 ## Try it
 
-Pick country **vn**, then under "A way with id" enter `1228612274`
-(a CT.02 expressway segment with `turn:lanes=left;through|through|none`) and click Go.
-Or paste any Overpass query in "The query" box.
+Pick country **vn**, set **Search by → Way by id**, enter `1228612274`
+(a CT.02 expressway segment with `turn:lanes=left;through|through|none`) and click
+**Search**. Or search a whole route with **Relation by ref** (`QL.51`) or **by name**.
+Expand **Configuration** to toggle adjacent ways, intersection detection, lane width and more.
 
 ## Structure
 
 | File | Origin |
 |------|--------|
 | `src/lib/osm/visualizer.ts` | port of `OSMData.pm` + `OSMLanes.pm` + `OSMDraw.pm` + `render.pl` loop |
+| `src/lib/osm/wikidata.ts` | official road length (Wikidata property P2043) |
 | `src/lib/osm/types.ts` | data model |
-| `src/routes/+page.svelte` | form, Leaflet map, event delegation on rendered HTML |
+| `src/routes/+page.svelte` | orchestrates the modules; diagram↔map wiring; draggable split |
+| `src/lib/components/*.svelte` | SearchPanel · StatsDashboard · DiagramView · MapView · ExportPanel |
 | `static/css/{style,de,be,vn}.css` | reused verbatim from the original — the port emits the same class names |
