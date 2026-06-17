@@ -1,0 +1,107 @@
+/* Shared chrome for the app modules (search, export, dashboard).
+   Imported once from +page.svelte so every module looks the same. */
+
+/* the ported style.css forces body { min-width:1200px }, which made the whole
+   page scroll horizontally on top of the diagram's own scroll. Drop it. */
+body {
+  min-width: 0 !important; /* beat the verbatim ported style.css we don't edit */
+}
+
+.module {
+  border: 1px solid #d9dee6;
+  border-radius: 8px;
+  background: #fff;
+  padding: 12px 14px;
+  margin: 0 0 14px;
+  font-family: sans-serif;
+}
+
+.module > header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+.module > header h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  flex: 1;
+}
+.module .lead {
+  margin: -4px 0 10px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* form rows: label on the left, control on the right, evenly spaced */
+.module .row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.module label {
+  font-size: 13px;
+  color: #374151;
+}
+
+.module input[type='text'],
+.module select {
+  font: inherit;
+  font-size: 13px;
+  padding: 5px 8px;
+  border: 1px solid #cbd2dc;
+  border-radius: 5px;
+  background: #fff;
+}
+.module input[type='text']:focus,
+.module select:focus {
+  outline: 2px solid #9bb4d6;
+  border-color: #9bb4d6;
+}
+
+.btn {
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 14px;
+  border: 1px solid #cbd2dc;
+  border-radius: 5px;
+  background: #f3f5f9;
+  color: #374151;
+  cursor: pointer;
+}
+.btn:hover {
+  background: #e7ebf2;
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.btn-primary {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+.btn-primary:hover {
+  background: #1d4ed8;
+}
+
+/* little round "?" help toggle in a module header */
+.help-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid #cbd2dc;
+  background: #f3f5f9;
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+}
+.help-btn[aria-pressed='true'] {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}

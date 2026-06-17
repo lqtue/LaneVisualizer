@@ -6,12 +6,15 @@
   import DiagramView from '$lib/components/DiagramView.svelte';
   import MapView from '$lib/components/MapView.svelte';
   import StatsDashboard from '$lib/components/StatsDashboard.svelte';
+  import ExportPanel from '$lib/components/ExportPanel.svelte';
+  import '$lib/components/modules.css';
   import type {
     RenderResult,
     WayStat,
     RelationMeta,
     SearchRequest,
-    Intersection
+    Intersection,
+    ExportRow
   } from '$lib/osm/types';
 
   // ---- form / page state ------------------------------------------------
@@ -30,6 +33,8 @@
   let officialKm = $state<number | null>(null);
   let meta = $state<RelationMeta | null>(null);
   let intersections = $state<Intersection[]>([]);
+  let intersectionsRan = $state(false);
+  let exportRows = $state<ExportRow[]>([]);
 
   // child component instance (imperative map API)
   let mapView: MapView;
@@ -43,6 +48,8 @@
     officialKm = null;
     meta = null;
     intersections = [];
+    intersectionsRan = req.opts.intersections;
+    exportRows = [];
     try {
       const v = new LaneVisualizer(req.opts);
       const r = await v.readData(req.query, 0);
@@ -74,6 +81,7 @@
       stats = result.stats;
       rawLengthKm = result.rawLengthKm;
       intersections = result.intersections;
+      exportRows = result.exportRows;
       meta = v.getRelationMeta();
       if (!html.trim()) errorMsg = 'Query returned data but no highway ways could be drawn.';
       // official length from Wikidata (non-blocking; ignore failures)
@@ -106,7 +114,7 @@
         lanewidth: false,
         usenodes: false,
         extendway: false,
-        intersections: true
+        intersections: false
       }
     );
   }
@@ -151,9 +159,13 @@
 {#if loading}<p class="status">Loading from Overpass…</p>{/if}
 {#if errorMsg}<p class="status error">{errorMsg}</p>{/if}
 
-<!-- module 2: completeness dashboard -->
+<!-- module 2: completeness dashboard (export button lives in its header) -->
 {#if stats.length}
-  <StatsDashboard {stats} {rawLengthKm} {officialKm} {meta} {intersections} />
+  <StatsDashboard {stats} {rawLengthKm} {officialKm} {meta} {intersections} {intersectionsRan}>
+    {#snippet actions()}
+      <ExportPanel rows={exportRows} name={meta?.ref || meta?.name || 'osm-export'} />
+    {/snippet}
+  </StatsDashboard>
 {/if}
 
 <!-- module 3: split screen — diagram | (drag) | map -->

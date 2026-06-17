@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
   import type { WayStat, RelationMeta, Criterion, Intersection } from '$lib/osm/types';
 
   let {
@@ -6,14 +7,20 @@
     rawLengthKm = 0,
     officialKm = null,
     meta = null,
-    intersections = []
+    intersections = [],
+    intersectionsRan = false,
+    actions
   }: {
     stats: WayStat[];
     rawLengthKm: number;
     officialKm: number | null;
     meta: RelationMeta | null;
     intersections: Intersection[];
+    intersectionsRan: boolean;
+    actions?: Snippet;
   } = $props();
+
+  let detailed = $state(false);
 
   const MAJOR = new Set([
     'motorway', 'motorway_link', 'trunk', 'trunk_link',
@@ -73,148 +80,200 @@
     if (pct >= 60) return '#f9a825';
     return '#c62828';
   }
+  // length-vs-official: both far-under and far-over are discrepancies worth a look
+  function covColor(pct: number): string {
+    if (pct >= 90 && pct <= 110) return '#2e7d32';
+    if (pct >= 70 && pct <= 130) return '#f9a825';
+    return '#c62828';
+  }
 
-  const osmVsOfficial = $derived(
+  // headline 1: overall attribute completeness = mean of the length-weighted criteria
+  const overallPct = $derived(
+    coverage.length ? coverage.reduce((s, c) => s + c.pct, 0) / coverage.length : 0
+  );
+  // headline 2: how much of the real road is mapped at all (decoupled to match official)
+  const lengthCovPct = $derived(
     officialKm != null && officialKm > 0 ? (decoupledKm / officialKm) * 100 : null
   );
+  // gaps to fix, worst first
+  const ranked = $derived([...coverage].sort((a, b) => a.pct - b.pct));
 </script>
 
-<div class="dash">
-  <div class="dash-head">
+<section class="module">
+  <header>
     <h2>{meta?.ref || meta?.name || 'Road'} — data completeness</h2>
-    <div class="lengths">
-      <div class="len"><span class="num">{rawLengthKm.toFixed(1)}</span><span class="unit">km</span><span class="cap">OSM raw (all ways)</span></div>
-      <div class="len"><span class="num">~{decoupledKm.toFixed(1)}</span><span class="unit">km</span><span class="cap">decoupled est.<sup>*</sup></span></div>
-      <div class="len">
-        <span class="num">{officialKm != null ? officialKm.toFixed(1) : '—'}</span><span class="unit">km</span>
-        <span class="cap">official {meta?.wikidata ? `(${meta.wikidata})` : '(Wikidata)'}</span>
-      </div>
-      {#if osmVsOfficial != null}
-        <div class="len"><span class="num">{osmVsOfficial.toFixed(0)}%</span><span class="cap">decoupled / official</span></div>
-      {/if}
-      <div class="len" title="nodes shared with a crossing highway">
-        <span class="num">{intersections.length}</span><span class="cap">intersections ({majorCount} major)</span>
-      </div>
+    <button class="btn" aria-pressed={detailed} onclick={() => (detailed = !detailed)}>
+      {detailed ? 'Less' : 'Details'}
+    </button>
+    {@render actions?.()}
+  </header>
+
+  <!-- two headline scores: the two questions a QA asks -->
+  <div class="scores">
+    <div class="score">
+      <span class="big" style={`color:${barColor(overallPct)}`}>{overallPct.toFixed(0)}%</span>
+      <span class="lbl">attributes tagged</span>
+      <span class="hint">mean coverage across {coverage.length} fields, weighted by length</span>
     </div>
-    <p class="foot"><sup>*</sup> oneway ways counted as half (assumed dual carriageway); not geometry-paired.</p>
+    <div class="score">
+      {#if lengthCovPct != null}
+        <span class="big" style={`color:${covColor(lengthCovPct)}`}>{lengthCovPct.toFixed(0)}%</span>
+        <span class="lbl">length vs official</span>
+        <span class="hint">~{decoupledKm.toFixed(1)} km in OSM vs {officialKm!.toFixed(1)} km official</span>
+      {:else}
+        <span class="big muted">—</span>
+        <span class="lbl">length vs official</span>
+        <span class="hint">no official length (Wikidata)</span>
+      {/if}
+    </div>
+    <div class="meta-stats">
+      <div><b>{rawLengthKm.toFixed(1)}</b> km in OSM</div>
+      <div><b>{stats.length}</b> ways</div>
+      {#if intersectionsRan}
+        <div title="nodes shared with a crossing highway"><b>{intersections.length}</b> intersections ({majorCount} major)</div>
+      {:else}
+        <div class="muted-stat">intersections not checked</div>
+      {/if}
+    </div>
   </div>
 
-  <div class="cards">
-    {#each coverage as c (c.key)}
-      <div class="card" title={`${c.missingWays} ways · ${c.missingKm.toFixed(1)} km missing`}>
-        <div class="card-top"><span class="clabel">{c.label}</span><span class="pct">{c.pct.toFixed(0)}%</span></div>
+  <!-- gaps to fix, worst first -->
+  <div class="bars">
+    {#each ranked as c (c.key)}
+      <div class="bar" title={`${c.missingWays} ways · ${c.missingKm.toFixed(1)} km missing`}>
+        <span class="blabel">{c.label}</span>
         <div class="track"><div class="fill" style={`width:${c.pct}%;background:${barColor(c.pct)}`}></div></div>
-        <div class="sub">missing {c.missingKm.toFixed(1)} km · {c.missingWays} ways</div>
+        <span class="bpct">{c.pct.toFixed(0)}%</span>
       </div>
     {/each}
   </div>
 
-  {#if speedDist().length}
-    <div class="speeds">
-      <span class="clabel">Maxspeed values:</span>
-      {#each speedDist() as s (s.v)}
-        <span class="chip">{Math.round(s.v)} <small>· {s.km.toFixed(1)}km</small></span>
-      {/each}
+  <!-- details: sanity checks, not triage drivers -->
+  {#if detailed}
+    <div class="details">
+      {#if speedDist().length}
+        <div class="speeds">
+          <span class="ctx">Maxspeed distribution</span>
+          {#each speedDist() as s (s.v)}
+            <span class="chip"><b>{Math.round(s.v)} km/h</b> · {s.km.toFixed(1)} km</span>
+          {/each}
+        </div>
+      {/if}
+      <p class="note">"length vs official" counts oneway ways as half (assumed dual carriageway); not geometry-paired. Over 100% usually means the relation covers more than the official figure.</p>
     </div>
   {/if}
-</div>
+</section>
 
 <style>
-  .dash {
-    clear: both;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    padding: 12px 14px;
-    margin: 8px 0 16px;
-    background: #f3f6fb;
-    font-family: sans-serif;
-  }
-  .dash-head h2 {
-    margin: 0 0 8px;
-    font-size: 16px;
-  }
-  .lengths {
+  .scores {
     display: flex;
     flex-wrap: wrap;
-    gap: 18px;
-    align-items: flex-end;
+    align-items: center;
+    gap: 28px;
+    margin-bottom: 14px;
   }
-  .len {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.1;
-  }
-  .len .num {
-    font-size: 22px;
-    font-weight: 700;
-  }
-  .len .unit {
-    font-size: 11px;
-    color: #666;
-  }
-  .len .cap {
-    font-size: 11px;
-    color: #888;
-  }
-  .foot {
-    font-size: 10px;
-    color: #999;
-    margin: 6px 0 0;
-  }
-  .cards {
+  .score {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 8px;
-    margin-top: 12px;
-  }
-  .card {
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    padding: 6px 8px;
-    background: #fff;
-  }
-  .card-top {
-    display: flex;
-    justify-content: space-between;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 8px;
     align-items: baseline;
   }
-  .clabel {
-    font-size: 12px;
-    color: #444;
+  .score .big {
+    grid-row: 1 / 3;
+    font-size: 40px;
+    font-weight: 800;
+    line-height: 0.9;
   }
-  .pct {
-    font-size: 16px;
+  .score .big.muted {
+    color: #cbd2dc;
+  }
+  .score .lbl {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    align-self: end;
+  }
+  .score .hint {
+    font-size: 11px;
+    color: #9ca3af;
+  }
+  .meta-stats {
+    margin-left: auto;
+    font-size: 12px;
+    color: #6b7280;
+    text-align: right;
+    line-height: 1.5;
+  }
+  .meta-stats b {
+    color: #374151;
+  }
+  .muted-stat {
+    color: #b6bcc6;
+    font-style: italic;
+  }
+
+  .bars {
+    display: grid;
+    gap: 5px;
+  }
+  .bar {
+    display: grid;
+    grid-template-columns: 110px 1fr 38px;
+    align-items: center;
+    gap: 10px;
+  }
+  .blabel {
+    font-size: 12px;
+    color: #4b5563;
+  }
+  .bpct {
+    font-size: 12px;
     font-weight: 700;
+    text-align: right;
+    color: #374151;
   }
   .track {
-    height: 6px;
-    border-radius: 3px;
-    background: #eee;
+    height: 8px;
+    border-radius: 4px;
+    background: #eceff3;
     overflow: hidden;
-    margin: 4px 0 3px;
   }
   .fill {
     height: 100%;
   }
-  .sub {
-    font-size: 10px;
-    color: #999;
+
+  .details {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #eef1f5;
   }
   .speeds {
-    margin-top: 12px;
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
     align-items: center;
+    gap: 8px;
+  }
+  .ctx {
+    font-size: 12px;
+    font-weight: 600;
+    color: #4b5563;
   }
   .chip {
-    background: #eef;
-    border: 1px solid #ccd;
-    border-radius: 10px;
-    padding: 1px 8px;
+    background: #eef2ff;
+    border: 1px solid #dbe2f5;
+    border-radius: 12px;
+    padding: 2px 10px;
     font-size: 12px;
+    color: #4b5563;
   }
-  .chip small {
-    color: #779;
+  .chip b {
+    color: #1f2937;
+  }
+  .note {
+    font-size: 11px;
+    color: #9ca3af;
+    margin: 10px 0 0;
+    line-height: 1.4;
   }
 </style>

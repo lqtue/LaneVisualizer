@@ -1478,13 +1478,25 @@ export class LaneVisualizer {
       html += '<hr>';
     }
 
+    // flat export rows: computed fields up front, then every raw OSM tag on the way
+    const exportRows = this.stats.map((s) => ({
+      wayId: s.id,
+      name: s.name,
+      ref: s.ref,
+      lengthKm: +(s.length / 1000).toFixed(3),
+      oneway: s.oneway,
+      maxspeedKmh: s.maxspeed ?? '',
+      ...this.waydata[s.id].tags
+    }));
+
     return {
       html,
       totalStartPoints: this.totalStartPoints,
       wayCoords: this.wayCoords,
       stats: this.stats,
       rawLengthKm: this.totallength / 1000,
-      intersections: this.intersections
+      intersections: this.intersections,
+      exportRows
     };
   }
 }

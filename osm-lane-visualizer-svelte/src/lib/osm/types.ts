@@ -131,6 +131,9 @@ export interface WayGeom {
   crossings?: { lat: number; lon: number; label: string }[];
 }
 
+// one flat row per drawn way for CSV/JSON export: computed fields + all raw OSM tags
+export type ExportRow = Record<string, string | number | boolean>;
+
 export interface RenderResult {
   html: string;
   totalStartPoints: number;
@@ -139,4 +142,5 @@ export interface RenderResult {
   stats: WayStat[];
   rawLengthKm: number;
   intersections: Intersection[];
+  exportRows: ExportRow[];
 }

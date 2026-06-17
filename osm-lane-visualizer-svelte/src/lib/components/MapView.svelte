@@ -9,26 +9,48 @@
   let polyline: any;
   let crossLayer: any;
   let mapEl: HTMLDivElement;
+  let geomOpacity = $state(0.85); // road geometry line opacity (slider)
+
+  function applyOpacity() {
+    polyline?.setStyle({ opacity: geomOpacity });
+    marker?.setStyle?.({ opacity: geomOpacity, fillOpacity: geomOpacity });
+  }
 
   onMount(async () => {
     L = (await import('leaflet')).default;
     await import('leaflet/dist/leaflet.css');
     map = L.map(mapEl).setView([16.0, 107.5], 5); // Vietnam
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: 'Map © <a href="https://www.openstreetmap.org">OpenStreetMap</a>'
     }).addTo(map);
-    marker = L.marker(map.getCenter()).addTo(map);
+    const sat = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      { attribution: 'Imagery © <a href="https://www.esri.com">Esri</a>', maxZoom: 19 }
+    );
+    L.control.layers({ OSM: osm, Satellite: sat }, {}, { position: 'topright' }).addTo(map);
+    marker = beginMarker(map.getCenter());
     polyline = L.polyline([[0, 0]]).addTo(map);
     // the map sits in a CSS-grid column; recompute size once layout settles
     setTimeout(() => map.invalidateSize(), 0);
   });
 
+  // circle marker for the begin point (avoids Leaflet's missing default icon PNG)
+  function beginMarker(latlng: [number, number]) {
+    return L.circleMarker(latlng, {
+      radius: 6,
+      color: '#1d4ed8',
+      weight: 2,
+      fillColor: '#3b82f6',
+      fillOpacity: 1
+    }).addTo(map);
+  }
+
   function draw(c: WayGeom | undefined, color: string, weight: number) {
     if (!c || !map) return;
     map.removeLayer(marker);
-    marker = L.marker(c.begin).addTo(map);
+    marker = beginMarker(c.begin);
     map.removeLayer(polyline);
-    polyline = L.polyline(c.line, { color, weight }).addTo(map);
+    polyline = L.polyline(c.line, { color, weight, opacity: geomOpacity }).addTo(map);
     if (crossLayer) map.removeLayer(crossLayer);
     crossLayer = L.layerGroup();
     for (const x of c.crossings ?? []) {
@@ -65,7 +87,12 @@
 
 <div class="mapwrap">
   <div class="map" bind:this={mapEl}></div>
-  <p class="hint">Hover a way to preview · click a way row to zoom here.</p>
+  <div class="hint">
+    <span>Hover a way to preview · click a way row to zoom here.</span>
+    <label class="opacity">Road opacity {Math.round(geomOpacity * 100)}%
+      <input type="range" min="0.1" max="1" step="0.05" bind:value={geomOpacity} oninput={applyOpacity} />
+    </label>
+  </div>
 </div>
 
 <style>
@@ -81,8 +108,18 @@
     border-radius: 6px;
   }
   .hint {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
     font-size: 11px;
     color: #888;
     margin: 6px 2px 0;
+  }
+  .opacity {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
   }
 </style>

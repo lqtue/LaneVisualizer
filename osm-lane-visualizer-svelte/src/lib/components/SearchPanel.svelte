@@ -14,100 +14,124 @@
     onsearch: (r: SearchRequest) => void;
   } = $props();
 
-  // configuration toggles
-  let usePlacement = $state(false);
-  let adjacent = $state(false);
-  let lanewidth = $state(false);
-  let usenodes = $state(false);
-  let extendway = $state(false);
-  let intersections = $state(true);
+  // --- search by: one selector + one input, instead of four rows ----------
+  const SEARCH_BY = [
+    { key: 'relref', label: 'Relation by ref', placeholder: 'QL.51', build: relRefQuery },
+    { key: 'relname', label: 'Relation by name', placeholder: 'Quốc lộ 51', build: relNameQuery },
+    { key: 'relid', label: 'Relation by id', placeholder: '123456', build: relQuery },
+    { key: 'wayid', label: 'Way by id', placeholder: '123456', build: wayQuery }
+  ] as const;
+
+  let searchBy = $state<(typeof SEARCH_BY)[number]['key']>('relname');
+  let term = $state('Quốc lộ 51');
+  const current = $derived(SEARCH_BY.find((s) => s.key === searchBy)!);
+
+  // --- configuration toggles + their explanations -------------------------
+  const CONFIG = [
+    { key: 'usePlacement', label: 'Use placement', help: 'Use the placement tag to position lanes more naturally on the carriageway.' },
+    { key: 'adjacent', label: 'Use adjacent ways', help: "Also draw ways that join at each segment's end node." },
+    { key: 'lanewidth', label: 'Use lane width', help: 'Read lane width from the width tag instead of a fixed size.' },
+    { key: 'usenodes', label: 'Use tags on nodes', help: 'Show node tags (signals, stop, crossing…) along the way.' },
+    { key: 'extendway', label: 'Include ways before & after', help: 'Add arrows to step to the way before and after this one.' },
+    { key: 'intersections', label: 'Detect intersections', help: 'Find roads crossing this one (one extra Overpass query).' }
+  ] as const;
+
+  let cfg = $state<Record<string, boolean>>({
+    usePlacement: false,
+    adjacent: false,
+    lanewidth: false,
+    usenodes: false,
+    extendway: false,
+    intersections: false
+  });
   let start = $state(1);
+  let showHelp = $state(false);
+  let showConfig = $state(false);
 
-  // search inputs
-  let relref = $state('QL.51');
-  let relname = $state('');
-  let relid = $state('');
-  let wayid = $state('');
-
-  function opts(): Options {
-    return { country, usePlacement, adjacent, lanewidth, usenodes, extendway, intersections };
-  }
-  function go(q: string) {
-    onsearch({ query: q, start: Number(start) || 1, opts: opts() });
+  function go() {
+    if (loading) return;
+    const opts: Options = { country, ...cfg } as Options;
+    onsearch({ query: current.build(term.trim()), start: Number(start) || 1, opts });
   }
 </script>
 
-<section class="search-panel">
-  <h2 class="panel-title">Search</h2>
-  <p class="lead">
-    Look up a way or relation. Lane attributes and a completeness dashboard render below;
-    hover or click a way to drive the map.
-  </p>
-
-  <div class="config">
-    <h3>Configuration</h3>
-    <label title="Evaluate the placement tag for a more natural lane arrangement">
-      <input type="checkbox" bind:checked={usePlacement} /> Use placement</label
-    >
-    <br /><label title="Show geometry of ways joining at each segment's end node">
-      <input type="checkbox" bind:checked={adjacent} /> Use adjacent ways</label
-    >
-    <br /><label title="Determine lane width from the width tag">
-      <input type="checkbox" bind:checked={lanewidth} /> Use lane width</label
-    >
-    <br /><label title="Use tags on nodes (signals, stop, crossing, …)">
-      <input type="checkbox" bind:checked={usenodes} /> Use tags on nodes</label
-    >
-    <br /><label title="Show navigation arrows to step way-by-way">
-      <input type="checkbox" bind:checked={extendway} /> Include ways before &amp; after</label
-    >
-    <br /><label title="Find roads crossing this one (one extra Overpass query)">
-      <input type="checkbox" bind:checked={intersections} /> Detect intersections</label
-    >
-    <br /><label>Country
+<section class="module">
+  <header>
+    <h2>Search</h2>
+    <label>Country
       <select bind:value={country}>
         <option value="vn">vn</option>
         <option value="de">de</option>
         <option value="be">be</option>
-      </select></label
-    >
-    <br /><label>Start at end number
-      <input type="text" bind:value={start} style="width:30px" /></label
-    >
-    <span>(found {totalStartPoints} end nodes)</span>
+      </select>
+    </label>
+  </header>
+
+  <div class="row search-row">
+    <label>Search by
+      <select bind:value={searchBy}>
+        {#each SEARCH_BY as s (s.key)}<option value={s.key}>{s.label}</option>{/each}
+      </select>
+    </label>
+    <input
+      type="text"
+      bind:value={term}
+      placeholder={current.placeholder}
+      onkeydown={(e) => e.key === 'Enter' && go()}
+      style="flex:1;min-width:160px"
+    />
+    <button class="btn btn-primary" disabled={loading} onclick={go}>
+      {loading ? 'Searching…' : 'Search'}
+    </button>
   </div>
 
-  <div class="selectquery">
-    <h3>Search for:</h3>
-    <p>
-      <label>A relation with ref = <input type="text" bind:value={relref} /></label>
-      <input type="button" value=" Go " disabled={loading} onclick={() => go(relRefQuery(relref))} />
-      <br /><label>A relation with name = <input type="text" bind:value={relname} /></label>
-      <input type="button" value=" Go " disabled={loading} onclick={() => go(relNameQuery(relname))} />
-      <br /><label>A relation with id = <input type="text" bind:value={relid} /></label>
-      <input type="button" value=" Go " disabled={loading} onclick={() => go(relQuery(relid))} />
-      <br /><label>A way with id = <input type="text" bind:value={wayid} /></label>
-      <input type="button" value=" Go " disabled={loading} onclick={() => go(wayQuery(wayid))} />
-    </p>
+  <div class="row config-bar">
+    <button class="btn" aria-pressed={showConfig} onclick={() => (showConfig = !showConfig)}>
+      {showConfig ? '▾' : '▸'} Configuration
+    </button>
+    {#if showConfig}
+      <button class="help-btn" aria-pressed={showHelp} title="Explain each option" onclick={() => (showHelp = !showHelp)}>?</button>
+    {/if}
   </div>
+
+  {#if showConfig}
+    <div class="config-grid">
+      {#each CONFIG as c (c.key)}
+        <div class="opt">
+          <label><input type="checkbox" bind:checked={cfg[c.key]} /> {c.label}</label>
+          {#if showHelp}<p class="help">{c.help}</p>{/if}
+        </div>
+      {/each}
+      <div class="opt">
+        <label>Start at end number <input type="text" bind:value={start} style="width:42px" /></label>
+        {#if showHelp}<p class="help">Which chain end to begin drawing from ({totalStartPoints} found).</p>{/if}
+      </div>
+    </div>
+  {/if}
 </section>
 
 <style>
-  .search-panel {
-    display: flow-root; /* contains the floated .config / .selectquery */
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    background: #fff;
-    padding: 10px 14px 14px;
-    margin: 8px 0 16px;
+  .search-row {
+    margin-bottom: 8px;
   }
-  .panel-title {
-    margin: 0 0 4px;
-    font-size: 16px;
+  .config-bar {
+    gap: 6px;
   }
-  .lead {
-    margin: 0 0 8px;
-    font-size: 12px;
-    color: #666;
+  .config-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 6px 16px;
+    margin-top: 10px;
+  }
+  .opt label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .help {
+    margin: 2px 0 0 20px;
+    font-size: 11px;
+    color: #6b7280;
+    line-height: 1.3;
   }
 </style>
