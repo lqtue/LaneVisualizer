@@ -26,7 +26,8 @@
   // add (or replace) a custom XYZ tile source and switch to it. {z}/{x}/{y} template.
   function addCustom() {
     const url = customUrl.trim();
-    if (!map || !/\{z\}.*\{x\}.*\{y\}|\{z\}.*\{y\}.*\{x\}/.test(url)) return;
+    // need all three placeholders, in any order (e.g. Google: ?x={x}&y={y}&z={z})
+    if (!map || !['{z}', '{x}', '{y}'].every((t) => url.includes(t))) return;
     if (customLayer) {
       map.removeLayer(customLayer);
       layersControl.removeLayer(customLayer);
